@@ -1,0 +1,6 @@
+[
+    { "name": "Summer giveaway", "startDate": "July 1, 2023", "winners": "0/3", "action": "Start" },
+    { "name": "Back to school", "startDate": "Aug 1, 2023", "winners": "0/3", "action": "Stop" },
+    { "name": "Halloween", "startDate": "Oct 1, 2023", "winners": "0/3", "action": "Delete" },
+    { "name": "Holiday shopping spree", "startDate": "Nov 1, 2023", "winners": "0/3", "action": "Stop" }
+]
