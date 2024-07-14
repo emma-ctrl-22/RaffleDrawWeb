@@ -59,10 +59,10 @@ const SideNav = () => {
           </li> */}
           <li className="rounded-sm">
             <NavLink
-              to="/winners"
+              to="/raffles"
               className={({ isActive }) =>
                 isActive
-                  ? 'flex items-center p-2 space-x-3 rounded-md bg-yellow-400 text-black mx-2'
+                  ? 'flex items-center p-2 space-x-3 rounded-md  text-black mx-2'
                   : 'flex items-center p-2 space-x-3 rounded-md hover:bg-gray-200 mx-2'
               }
             >

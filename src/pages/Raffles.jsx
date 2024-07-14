@@ -7,6 +7,8 @@ import { Dialog, DialogActions, DialogContent, DialogTitle, Button, IconButton }
 import ComputerIcon from '@mui/icons-material/Computer';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {toast} from 'react-hot-toast'
+import getRandomWinners from '../utils/getRandomWinners';
+import { useNavigate, useNavigation } from 'react-router-dom';
 
 
 const Raffles = () => {
@@ -135,6 +137,23 @@ const Raffles = () => {
       setDrawName('');
       setSelectedFile(null);
       setSpinTime('');
+  };
+  const navigate = useNavigate();
+
+  const handleStartDraw = async () => {
+    if (!selectedFile) {
+      toast.error('Please upload a CSV file.');
+      return;
+    }
+
+    try {
+      const winners = await getRandomWinners(selectedFile, numberOfDraws);
+      console.log('Winners:', winners);
+      navigate('/winners', { state: { winners, csvFile: selectedFile } });
+    } catch (error) {
+      console.error('Error getting random winners:', error);
+      toast.error('Error getting random winners.');
+    }
   };
   
   return (
@@ -316,8 +335,7 @@ const Raffles = () => {
 
       <div className="m-6 flex flex-row space-x-8">
         <button className="w-80 py-2 border rounded bg-yellow-400 text-center text-black" onClick={handleSaveDraw}>Save Draw</button>
-        
-        <button className="w-80 py-2 border rounded bg-yellow-400 text-center text-black">Start Draw</button>
+        <button className="w-80 py-2 border rounded bg-yellow-400 text-center text-black" onClick={handleStartDraw}>Start Draw</button>
       </div>
 
       <Dialog open={open} onClose={handleClose}>
