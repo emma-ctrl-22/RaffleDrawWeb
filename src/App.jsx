@@ -1,14 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import {
-  Login,
-  Dashboard,
-  Prizes,
-  Raffles,
-  Winners,
-  Report,
-  Settings,
-} from "./pages";
+import {Login,Dashboard,Prizes,Raffles,Winners,Report,Settings} from "./pages";
 import { DefaultLayout } from "./components";
 import { Toaster } from "react-hot-toast";
 
