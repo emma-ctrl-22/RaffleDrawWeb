@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
-import { FaTicketAlt, FaUsers, FaTrophy, FaGift, FaFileAlt, FaCog, FaHome } from 'react-icons/fa'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { FaTicketAlt, FaUsers, FaTrophy, FaGift, FaFileAlt, FaCog, FaHome, FaSignOutAlt } from 'react-icons/fa'
 
 const SideNav = () => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const location = useLocation()
   const [userRole, setUserRole] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'))
@@ -18,10 +19,17 @@ const SideNav = () => {
     setIsCollapsed(!isCollapsed)
   }
 
-  const NavItem = ({ to, icon, label, isDisabled = false }) => (
+  const handleLogout = () => {
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
+    navigate('/')
+  }
+
+  const NavItem = ({ to, icon, label, isDisabled = false, onClick }) => (
     <li className="rounded-sm">
       <NavLink
         to={to}
+        onClick={onClick}
         className={({ isActive }) =>
           `flex items-center p-2 space-x-3 rounded-md mx-2 ${
             isActive && !isDisabled
@@ -40,7 +48,7 @@ const SideNav = () => {
 
   return (
     <div
-      className={`flex flex-col p-1 text-black border-r-2 bg-white ${isCollapsed ? 'w-20' : 'w-60'} transition-width duration-300`}
+      className={`flex flex-col p-1 text-black border-r-2 bg-white ${isCollapsed ? 'w-20' : 'w-60'} transition-width duration-300 h-screen`}
       style={{ position: 'sticky', top: 0 }}
     >
       <div className="flex-1 mt-14">
@@ -57,6 +65,14 @@ const SideNav = () => {
             </>
           )}
         </ul>
+      </div>
+      <div className="mt-auto mb-4">
+        <NavItem
+          to="/"
+          icon={<FaSignOutAlt className='ml-4' />}
+          label="Logout"
+          onClick={handleLogout}
+        />
       </div>
     </div>
   )
