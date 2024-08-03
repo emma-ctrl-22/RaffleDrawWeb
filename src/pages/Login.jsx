@@ -3,24 +3,39 @@ import Momo from '../assets/Momo.png'
 import mtn from '../assets/mtn.png'
 import {toast} from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 const Login = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!username ) {
-      toast.error('Please enter a username')
+  // Example login function in your frontend
+  const loginUser = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('http://localhost:3000/users/login', {
+        username,
+        password
+      });
+
+      const data = response.data;
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      toast.success('Login successful!');
+      
+      // Redirect based on user role
+      if (data.user.role === 'admin') {
+        navigate('/dashboard');
+      } else if (data.user.role === 'user') {
+        navigate('/raffles');
+      }
+    } catch (error) {
+      console.error('Error logging in:', error);
+      toast.error(error.response?.data?.error || 'Login failed. Please try again.');
     }
-    else if (!password) {
-      toast.error('Please enter a password')
-    }else{
-      toast.success('Login Successful')
-      navigate('/dashboard')
-    }
-  }
+  };
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -31,7 +46,7 @@ const Login = () => {
       <h2 className="text-center text-2xl font-bold text-gray-900">Log in</h2>
       <div className="flex justify-center items-center flex-grow">
         <div className="w-full max-w-md  space-y-8">
-          <form onSubmit={handleSubmit} className=" space-y-6">
+          <form onSubmit={loginUser} className=" space-y-6">
             <div className="rounded-md shadow-sm space-y-4">
               <div>
                 <label htmlFor="username" className="block mb-3 text-md font-medium text-gray-900">

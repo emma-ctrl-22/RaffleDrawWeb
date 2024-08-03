@@ -1,3 +1,4 @@
+// DefaultLayout.jsx
 import React, { useState } from 'react';
 import SideNav from './SideNav';
 import IconButton from '@mui/material/IconButton';
@@ -15,10 +16,7 @@ const DefaultLayout = ({ children }) => {
     <div className="flex w-full h-full relative">
       {isSideNavVisible && <SideNav />}
       <main className={`flex-1 h-full overflow-y-auto bg-white scrollbar-thin ${isSideNavVisible ? 'ml-0' : 'ml-0'}`}>
-        <IconButton
-          className="absolute  left-2 z-50"
-          onClick={toggleSideNav}
-        >
+        <IconButton className="absolute left-2 z-50" onClick={toggleSideNav}>
           {isSideNavVisible ? <CloseIcon /> : <MenuIcon />}
         </IconButton>
         {children}
