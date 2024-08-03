@@ -1,24 +1,50 @@
-import React, { useState } from 'react';
-
-const fakeUsers = [
-  { id: 1, name: 'John Doe', role: 'Admin', active: true },
-  { id: 2, name: 'Jane Smith', role: 'User', active: true },
-  { id: 3, name: 'Sam Johnson', role: 'User', active: true },
-];
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 const Settings = () => {
-  const [users, setUsers] = useState(fakeUsers);
-  const [newUser, setNewUser] = useState({ name: '', role: 'User' ,passowrd:""});
+  const [users, setUsers] = useState([]);
+  const [newUser, setNewUser] = useState({ username: '', role: 'user', password: '' });
 
-  const handleAddUser = () => {
-    if (newUser.name) {
-      setUsers([...users, { id: users.length + 1, ...newUser, active: true }]);
-      setNewUser({ name: '', role: 'User' });
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:3000/users/get-all-users');
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to fetch users');
     }
   };
 
-  const handleDeactivateUser = (id) => {
-    setUsers(users.map(user => user.id === id ? { ...user, active: false } : user));
+  const handleAddUser = async () => {
+    if (newUser.username && newUser.password) {
+      try {
+        await axios.post('http://localhost:3000/users/create-new-user', newUser);
+        toast.success('User added successfully');
+        fetchUsers(); // Refresh the user list
+        setNewUser({ username: '', role: 'user', password: '' });
+      } catch (error) {
+        console.error('Error adding user:', error);
+        toast.error('Failed to add user');
+      }
+    } else {
+      toast.error('Please fill in all fields');
+    }
+  };
+
+  const handleDeactivateUser = async (id) => {
+    try {
+      await axios.put(`http://127.0.0.1:3000/users/deactivate/${id}`);
+      toast.success('User deactivated successfully');
+      fetchUsers(); // Refresh the user list
+    } catch (error) {
+      console.error('Error deactivating user:', error);
+      toast.error('Failed to deactivate user');
+    }
   };
 
   return (
@@ -30,8 +56,8 @@ const Settings = () => {
           <input
             type="text"
             placeholder="Enter username"
-            value={newUser.name}
-            onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+            value={newUser.username}
+            onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
             className="border border-gray-300 p-2 rounded"
           />
           <input
@@ -46,8 +72,8 @@ const Settings = () => {
             onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
             className="border border-gray-300 p-2 rounded"
           >
-            <option value="User">User</option>
-            <option value="Admin">Admin</option>
+            <option value="user">user</option>
+            <option value="admin">admin</option>
           </select>
           <button
             onClick={handleAddUser}
@@ -62,16 +88,16 @@ const Settings = () => {
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
             <tr>
-              <th className="py-2  border-b">Username</th>
-              <th className="py-2  border-b">Role</th>
-              <th className="py-2  border-b">Status</th>
-              <th className="py-2  border-b">Actions</th>
+              <th className="py-2 border-b">Username</th>
+              <th className="py-2 border-b">Role</th>
+              <th className="py-2 border-b">Status</th>
+              <th className="py-2 border-b">Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.map((user) => (
               <tr key={user.id} className={user.active ? '' : 'bg-gray-100'}>
-                <td className="py-2 px-4 border-b">{user.name}</td>
+                <td className="py-2 px-4 border-b">{user.username}</td>
                 <td className="py-2 px-4 border-b">{user.role}</td>
                 <td className="py-2 px-4 border-b">{user.active ? 'Active' : 'Inactive'}</td>
                 <td className="py-2 px-4 border-b">
