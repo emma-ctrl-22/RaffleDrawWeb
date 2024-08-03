@@ -10,7 +10,6 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
 
-  // Example login function in your frontend
   const loginUser = async (e) => {
     e.preventDefault();
     try {
@@ -18,17 +17,23 @@ const Login = () => {
         username,
         password
       });
-
-      const data = response.data;
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      console.log(response.data);
+      const { data, message, token } = response.data;
       
-      toast.success('Login successful!');
+      // Store token in localStorage
+      localStorage.setItem('token', token);
+      
+      // Store user data in localStorage
+      localStorage.setItem('user', JSON.stringify({ role: data, username }));
+      
+      console.log('Stored user data:', JSON.parse(localStorage.getItem('user')));
+      
+      toast.success(message || 'Login successful!');
       
       // Redirect based on user role
-      if (data.user.role === 'admin') {
+      if (data === 'admin') {
         navigate('/dashboard');
-      } else if (data.user.role === 'user') {
+      } else if (data === 'user') {
         navigate('/raffles');
       }
     } catch (error) {
