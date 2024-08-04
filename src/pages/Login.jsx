@@ -18,13 +18,13 @@ const Login = () => {
         password
       });
       console.log(response.data);
-      const { data, message, token } = response.data;
+      const { data, message, token,id } = response.data;
       
       // Store token in localStorage
       localStorage.setItem('token', token);
       
       // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify({ role: data, username }));
+      localStorage.setItem('user', JSON.stringify({ role: data, id }));
       
       console.log('Stored user data:', JSON.parse(localStorage.getItem('user')));
       

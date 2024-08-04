@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MoMo from '../assets/Momo.png';
-import { prizesData } from '../assets/prizesData';
-import { getPrizesByDrawType } from '../utils/getPrizesByDraw';
-import regions from '../assets/regionsData.json';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, IconButton } from '@mui/material';
+import regionsData from '../assets/regionsData.json';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from '@mui/material';
 import ComputerIcon from '@mui/icons-material/Computer';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import {toast} from 'react-hot-toast'
-import getRandomWinners from '../utils/getRandomWinners';
-import { useNavigate, useNavigation } from 'react-router-dom';
-
+import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Raffles = () => {
   const [selectedRegionButton, setSelectedRegionButton] = useState('National');
@@ -19,12 +16,27 @@ const Raffles = () => {
   const [selectedCounty, setSelectedCounty] = useState('');
   const [spinTime, setSpinTime] = useState('');
   const [selectedDrawType, setSelectedDrawType] = useState('Weekly');
-  const [drawName ,setDrawName] = useState('');
+  const [drawName, setDrawName] = useState('');
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedArea, setSelectedArea] = useState('');
+  const [prizesData, setPrizesData] = useState([]);
+  const userId = localStorage.getItem('userId');
 
-  const allCounties = Object.values(regions).flat();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchPrizes = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/prizes/get-all');
+        setPrizesData(response.data);
+      } catch (error) {
+        console.error('Error fetching prizes:', error);
+        toast.error('Failed to fetch prizes');
+      }
+    };
+    fetchPrizes();
+  }, []);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -58,7 +70,7 @@ const Raffles = () => {
     setSelectedDrawType(e.target.value);
   };
 
-  const prizeOptions = getPrizesByDrawType(selectedDrawType, prizesData);
+  const prizeOptions = prizesData.filter(prize => prize.Type === selectedDrawType);
 
   const prizeInputs = Array.from({ length: numberOfDraws }, (_, index) => (
     <select
@@ -66,11 +78,12 @@ const Raffles = () => {
       className="w-96 p-3 border rounded bg-slate-300 mb-6"
     >
       <option value="" disabled>Select a prize</option>
-      {prizeOptions.map((prize, idx) => (
-        <option key={idx} value={prize.prize}>{prize.prize}</option>
+      {prizeOptions.map((prize) => (
+        <option key={prize.id} value={prize.id}>{prize.PrizeName}</option>
       ))}
     </select>
   ));
+
   const handleOpen = () => {
     setOpen(true);
   };
@@ -78,67 +91,60 @@ const Raffles = () => {
   const handleClose = () => {
     setOpen(false);
   };
-  console.log(window.electron);
 
   const saveDrawToDatabase = async (drawData) => {
     try {
-    //   const response = await window.electron.saveDraw(drawData);
-    //   console.log("Draw saved successfully:", response);
-    //   toast.success('Draw saved successfully!');
-    //   setNumberOfDraws(1);
-    //   setSelectedRegion('');
-    //   setSelectedCounty('');
-    //   setSelectedArea('');
-    //   setDrawName('');
-    //   setSelectedFile(null);
-    //   setSpinTime('');
-    } catch (error) {
-      console.error("Error saving draw:", error);
-      toast.error('Error saving draw.');
-    }
-  };
-  // Call this function with the draw data when the user saves a draw
-  const handleSaveDraw = async () => {
-    let csvFileName = '';
-    if (selectedFile) {
-      try {
-        const result = await window.electron.uploadCSV(selectedFile.path);
-        csvFileName = result.fileName;
-        console.log(csvFileName);
-      } catch (error) {
-        console.error("Error uploading CSV:", error);
-        toast.error('Error uploading CSV file.');
-        return;
-      }
-    }
-  
-    const drawData = {
-      drawName,
-      drawSettings: selectedDrawType,
-      drawCoverage: selectedRegionButton,
-      drawType: selectedDrawButton,
-      spinTime,
-      numberOfDraws,
-      prizes: prizeOptions,
-      winners: [],
-      status: 'not started',
-      isPushedToOnlineDB: false,
-      selectedArea: selectedArea,
-      csvFileName: csvFileName
-    };
-  
-    console.log(drawData);
-    
-    saveDrawToDatabase(drawData);
-    setNumberOfDraws(1);
+      const response = await axios.post('http://127.0.0.1:3000/draws/create', drawData);
+      toast.success('Draw saved successfully!');
+      // Reset form fields
+      setNumberOfDraws(1);
       setSelectedRegion('');
       setSelectedCounty('');
       setSelectedArea('');
       setDrawName('');
       setSelectedFile(null);
       setSpinTime('');
+    } catch (error) {
+      console.error("Error saving draw:", error);
+      toast.error('Error saving draw.');
+    }
   };
-  const navigate = useNavigate();
+
+  const handleSaveDraw = async () => {
+    let filePath = '';
+    if (selectedFile) {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      try {
+        const response = await axios.post('/api/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        filePath = response.data.filePath;
+      } catch (error) {
+        console.error("Error uploading CSV:", error);
+        toast.error('Error uploading CSV file.');
+        return;
+      }
+    }
+
+    const drawData = {
+      DrawName: drawName,
+      DrawSetting: selectedDrawType,
+      DrawCoverage: selectedRegionButton,
+      DrawType: selectedDrawButton,
+      SpinTime: spinTime,
+      numberOfWinners: numberOfDraws,
+      RCName: selectedArea,
+      prizeSelection: prizeOptions.map(prize => prize.id),
+      author: userId,
+      FilePath: filePath
+    };
+
+    saveDrawToDatabase(drawData);
+  };
 
   const handleStartDraw = async () => {
     if (!selectedFile) {
@@ -147,15 +153,15 @@ const Raffles = () => {
     }
 
     try {
+      // Implement your getRandomWinners function
       const winners = await getRandomWinners(selectedFile, numberOfDraws);
-      console.log('Winners:', winners);
       navigate('/winners', { state: { winners, csvFile: selectedFile } });
     } catch (error) {
       console.error('Error getting random winners:', error);
       toast.error('Error getting random winners.');
     }
   };
-  
+
   return (
     <div className="overflow-y-auto scrollbar-thin">
       <div className="w-full flex flex-row justify-between h-14 mb-6">
@@ -163,198 +169,173 @@ const Raffles = () => {
         <img src={MoMo} alt="Logo 1" className="h-14" />
       </div>
 
+      {/* Draw settings */}
       <div className="m-6">
         <h3 className="text-lg font-semibold mb-4">Draw settings</h3>
         <div className="space-y-4">
-          <label className="flex items-center p-3 border rounded cursor-pointer">
-            <input
-              type="radio"
-              name="draw-settings"
-              className="form-radio text-indigo-600"
-              value="Weekly"
-              checked={selectedDrawType === 'Weekly'}
-              onChange={handleDrawTypeChange}
-            />
-            <span className="ml-2">Weekly</span>
-          </label>
-          <label className="flex items-center p-3 border rounded cursor-pointer">
-            <input
-              type="radio"
-              name="draw-settings"
-              className="form-radio text-indigo-600"
-              value="Monthly"
-              checked={selectedDrawType === 'Monthly'}
-              onChange={handleDrawTypeChange}
-            />
-            <span className="ml-2">Monthly</span>
-          </label>
-          <label className="flex items-center p-3 border rounded cursor-pointer">
-            <input
-              type="radio"
-              name="draw-settings"
-              className="form-radio text-indigo-600"
-              value="Grand prize"
-              checked={selectedDrawType === 'Grand prize'}
-              onChange={handleDrawTypeChange}
-            />
-            <span className="ml-2">Grand prize</span>
-          </label>
+          {['Weekly', 'Monthly', 'Grand'].map((type) => (
+            <label key={type} className="flex items-center p-3 border rounded cursor-pointer">
+              <input
+                type="radio"
+                name="draw-settings"
+                className="form-radio text-indigo-600"
+                value={type}
+                checked={selectedDrawType === type}
+                onChange={handleDrawTypeChange}
+              />
+              <span className="ml-2">{type}</span>
+            </label>
+          ))}
         </div>
       </div>
 
+      {/* Region selection */}
       <div className="m-6">
         <div className="flex space-x-6 w-96">
-          <button
-            className={`py-2 px-4 border rounded w-1/3 text-center ${selectedRegionButton === 'National' ? 'bg-yellow-400 font-bold' : ''}`}
-            onClick={() => handleRegionButtonClick('National')}
-          >
-            National
-          </button>
-          <button
-            className={`py-2 px-4 border rounded w-1/3 text-center ${selectedRegionButton === 'County' ? 'bg-yellow-400 font-bold' : ''}`}
-            onClick={() => handleRegionButtonClick('County')}
-          >
-            County
-          </button>
-          <button
-            className={`py-2 px-4 border rounded w-1/3 text-center ${selectedRegionButton === 'Region' ? 'bg-yellow-400 font-bold' : ''}`}
-            onClick={() => handleRegionButtonClick('Region')}
-          >
-            Region
-          </button>
+          {['National', 'County', 'Region'].map((region) => (
+            <button
+              key={region}
+              className={`py-2 px-4 border rounded w-1/3 text-center ${selectedRegionButton === region ? 'bg-yellow-400 font-bold' : ''}`}
+              onClick={() => handleRegionButtonClick(region)}
+            >
+              {region}
+            </button>
+          ))}
         </div>
       </div>
 
+      {/* Region/County selection */}
       <div className='m-6 flex flex-col'>
-        {selectedRegionButton === 'National' ? null : (
+        {selectedRegionButton !== 'National' && (
           <>
-            {selectedRegionButton === 'Region' ? (
-              <>
-                <h3 className="text-lg font-semibold mb-4">Select Region</h3>
-                <select
-                  className="w-96 p-3 border rounded bg-slate-300"
-                  value={selectedRegion}
-                  onChange={(e) => {setSelectedRegion(e.target.value);setSelectedArea(e.target.value);}}
-                >
-                  <option value="" disabled>Select a region</option>
-                  {Object.keys(regions).map((region, idx) => (
-                    <option key={idx} value={region}>{region}</option>
-                  ))}
-                </select>
-              </>
-            ) : (
-              <>
-                <h3 className="text-lg font-semibold mb-4">Select County</h3>
-                <select
-                  className="w-96 p-3 border rounded bg-slate-300"
-                  value={selectedCounty}
-                  onChange={(e) => {setSelectedCounty(e.target.value);setSelectedArea(e.target.value);}}
-                >
-                  <option value="" disabled>Select a county</option>
-                  {allCounties.map((county, idx) => (
-                    <option key={idx} value={county}>{county}</option>
-                  ))}
-                </select>
-              </>
-            )}
+            <h3 className="text-lg font-semibold mb-4">
+              Select {selectedRegionButton === 'Region' ? 'Region' : 'County'}
+            </h3>
+            <select
+              className="w-96 p-3 border rounded bg-slate-300"
+              value={selectedRegionButton === 'Region' ? selectedRegion : selectedCounty}
+              onChange={(e) => {
+                const selectedValue = e.target.value;
+                if (selectedRegionButton === 'Region') {
+                  setSelectedRegion(selectedValue);
+                } else {
+                  setSelectedCounty(selectedValue);
+                }
+                setSelectedArea(selectedValue);
+              }}
+            >
+              <option value="" disabled>Select a {selectedRegionButton === 'Region' ? 'region' : 'county'}</option>
+              {selectedRegionButton === 'Region'
+                ? Object.keys(regionsData).map((region, index) => (
+                  <option key={index} value={region}>{region}</option>
+                ))
+                : Object.values(regionsData).flat().map((county, index) => (
+                  <option key={index} value={county}>{county}</option>
+                ))
+              }
+            </select>
           </>
         )}
       </div>
-      <div className='ml-6'>
-        <input value={drawName} className="w-96 p-3 border rounded bg-slate-300" onChange={(e)=>setDrawName(e.target.value)} type="text" placeholder='Enter Draw Name '/> 
-      </div>
 
-
-      <div className="m-6 flex flex-col">
-        <h3 className="text-lg font-semibold mb-4">Draws</h3>
-        <div className="flex space-x-6 w-96">
-          <button
-            className={`py-2 px-4 border rounded w-1/3 text-center ${selectedDrawButton === 'Single' ? 'bg-yellow-400 font-bold' : ''}`}
-            onClick={() => handleDrawButtonClick('Single')}
-          >
-            Single
-          </button>
-          <button
-            className={`py-2 px-4 border rounded w-1/3 text-center ${selectedDrawButton === 'Multiple' ? 'bg-yellow-400 font-bold' : ''}`}
-            onClick={() => handleDrawButtonClick('Multiple')}
-          >
-            Multiple
-          </button>
+      {/* Draw type */}
+      <div className="m-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold mb-4">Draw type</h3>
+          <div className="flex space-x-6 w-96">
+            {['Single', 'Multiple'].map((type) => (
+              <button
+                key={type}
+                className={`py-2 px-4 border rounded w-1/2 text-center ${selectedDrawButton === type ? 'bg-yellow-400 font-bold' : ''}`}
+                onClick={() => handleDrawButtonClick(type)}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+          {selectedDrawButton === 'Multiple' && (
+            <>
+              <label className="text-lg font-semibold">Number of Draws</label>
+              <input
+                type="number"
+                className="w-96 p-3 border rounded bg-slate-300"
+                value={numberOfDraws}
+                onChange={handleNumberOfDrawsChange}
+              />
+            </>
+          )}
         </div>
-        {selectedDrawButton === 'Multiple' && (
-          <>
-          <h2 className="text-lg font-semibold mt-4">Number of Winners</h2>
-          <select
-          className="w-96 p-3 border rounded bg-slate-300 mt-2"
-          value={numberOfDraws}
-          onChange={(e) => setNumberOfDraws(e.target.value)}
-        >
-          <option value="" disabled>Select Number of Draws</option>
-          <option value={1}>1 </option>
-          <option value={2}>2 </option>
-          <option value={3}>3 </option>
-          <option value={4}>4 </option>
-          <option value={5}>5 </option>
-          <option value={6}>6 </option>
-          <option value={7}>7 </option>
-          <option value={8}>8 </option>
-          <option value={9}>9 </option>
-          <option value={10}>10 </option>
-        </select>
-          </>
-        )}
-         <div className=" flex flex-col">
-        <h3 className="text-lg font-semibold mb-4">Spin Time</h3>
-        <select
+      </div>
+
+      {/* Spin time */}
+      <div className="m-6">
+        <h3 className="text-lg font-semibold mb-4">Spin time</h3>
+        <input
+          type="text"
+          placeholder="Enter spin time"
           className="w-96 p-3 border rounded bg-slate-300"
           value={spinTime}
           onChange={(e) => setSpinTime(e.target.value)}
-        >
-          <option value="" disabled>Select spin time</option>
-          <option value="1">1 minute</option>
-          <option value="2">2 minutes</option>
-          <option value="5">5 minutes</option>
-        </select>
-      </div>
+        />
       </div>
 
-      <div className="m-6 flex flex-col">
-        <h3 className="text-lg font-semibold mb-4">Prize Selection</h3>
+      {/* Draw name */}
+      <div className="m-6">
+        <h3 className="text-lg font-semibold mb-4">Draw name</h3>
+        <input
+          type="text"
+          placeholder="Enter draw name"
+          className="w-96 p-3 border rounded bg-slate-300"
+          value={drawName}
+          onChange={(e) => setDrawName(e.target.value)}
+        />
+      </div>
+
+      {/* Prize selection */}
+      <div className="m-6">
+        <h3 className="text-lg font-semibold mb-4">Select prize for each draw</h3>
         {prizeInputs}
       </div>
+
+      {/* File upload */}
       <div className="m-6">
-        <h3 className="text-lg font-semibold mb-4">Upload data</h3>
-        <div className="flex items-center space-x-4 border rounded p-3 bg-white">
-          <button className="bg-yellow-500 text-black py-2 px-4 rounded" onClick={handleOpen}>Upload from...</button>
-        </div>
+        <h3 className="text-lg font-semibold mb-4">Upload CSV File</h3>
+        <Button variant="contained" component="label" startIcon={<CloudUploadIcon />}>
+          Upload CSV
+          <input type="file" accept=".csv" hidden onChange={handleFileSelect} />
+        </Button>
+        {selectedFile && <p>Selected File: {selectedFile.name}</p>}
       </div>
 
-      <div className="m-6">
-        <button className="w-80 py-2 border rounded bg-slate-300 text-center">Preview</button>
+      {/* Action buttons */}
+      <div className="flex justify-center mt-8 space-x-6">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSaveDraw}
+          startIcon={<ComputerIcon />}
+        >
+          Save Draw
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleStartDraw}
+          startIcon={<ComputerIcon />}
+        >
+          Start Draw
+        </Button>
       </div>
 
-      <div className="m-6 flex flex-row space-x-8">
-        <button className="w-80 py-2 border rounded bg-yellow-400 text-center text-black" onClick={handleSaveDraw}>Save Draw</button>
-        <button className="w-80 py-2 border rounded bg-yellow-400 text-center text-black" onClick={handleStartDraw}>Start Draw</button>
-      </div>
-
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Upload Items</DialogTitle>
+      {/* Confirmation dialog */}
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+        <DialogTitle>Save Draw</DialogTitle>
         <DialogContent>
-          <div className="flex justify-around mt-4 w-98 h-36">
-            <IconButton className='flex flex-col' component="label">
-              <ComputerIcon style={{ fontSize: 40 }} />
-              <input type="file" hidden onChange={handleFileSelect} accept=".csv" />
-              <p>Upload from pc </p>
-            </IconButton>
-            <IconButton className='flex flex-col'>
-              <CloudUploadIcon style={{ fontSize: 40 }} />
-              <p>Upload from Server </p>
-            </IconButton>
-          </div>
+          <p>Are you sure you want to save this draw?</p>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Close</Button>
+          <Button onClick={handleClose} color="primary">Cancel</Button>
+          <Button onClick={handleSaveDraw} color="primary">Save</Button>
         </DialogActions>
       </Dialog>
     </div>
