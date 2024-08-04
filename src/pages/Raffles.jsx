@@ -21,7 +21,16 @@ const Raffles = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedArea, setSelectedArea] = useState('');
   const [prizesData, setPrizesData] = useState([]);
-  const userId = localStorage.getItem('userId');
+  const [userId, setUserId] = useState(null);
+  const [selectedPrizeId, setSelectedPrizeId] = useState('');
+
+  useEffect(() => {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      const user = JSON.parse(userString);
+      setUserId(user.id);
+    }
+  }, []);
 
   const navigate = useNavigate();
 
@@ -72,17 +81,9 @@ const Raffles = () => {
 
   const prizeOptions = prizesData.filter(prize => prize.Type === selectedDrawType);
 
-  const prizeInputs = Array.from({ length: numberOfDraws }, (_, index) => (
-    <select
-      key={index}
-      className="w-96 p-3 border rounded bg-slate-300 mb-6"
-    >
-      <option value="" disabled>Select a prize</option>
-      {prizeOptions.map((prize) => (
-        <option key={prize.id} value={prize.id}>{prize.PrizeName}</option>
-      ))}
-    </select>
-  ));
+  const handlePrizeChange = (e) => {
+    setSelectedPrizeId(e.target.value);
+  };
 
   const handleOpen = () => {
     setOpen(true);
@@ -111,39 +112,59 @@ const Raffles = () => {
   };
 
   const handleSaveDraw = async () => {
+    if (!userId) {
+      toast.error('User not authenticated');
+      return;
+    }
+
     let filePath = '';
     if (selectedFile) {
       const formData = new FormData();
       formData.append('file', selectedFile);
-
+  
       try {
-        const response = await axios.post('/api/upload', formData, {
+        const response = await axios.post('http://localhost:3000/draws/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
         filePath = response.data.filePath;
+        console.log('File uploaded successfully:', filePath);
       } catch (error) {
         console.error("Error uploading CSV:", error);
         toast.error('Error uploading CSV file.');
         return;
       }
     }
-
+  
     const drawData = {
       DrawName: drawName,
-      DrawSetting: selectedDrawType,
-      DrawCoverage: selectedRegionButton,
+      DrawSetting: selectedRegionButton,
+      DrawCoverage: selectedDrawType ,
       DrawType: selectedDrawButton,
       SpinTime: spinTime,
       numberOfWinners: numberOfDraws,
       RCName: selectedArea,
-      prizeSelection: prizeOptions.map(prize => prize.id),
+      priceSelection: selectedPrizeId,
       author: userId,
       FilePath: filePath
     };
-
-    saveDrawToDatabase(drawData);
+  console.log('Draw data:', drawData);
+    try {
+      const response = await axios.post('http://localhost:3000/draws/create', drawData);
+      toast.success('Draw saved successfully!');
+      // Reset form fields
+      setNumberOfDraws(1);
+      setSelectedRegion('');
+      setSelectedCounty('');
+      setSelectedArea('');
+      setDrawName('');
+      setSelectedFile(null);
+      setSpinTime('');
+    } catch (error) {
+      console.error("Error saving draw:", error);
+      toast.error('Error saving draw.');
+    }
   };
 
   const handleStartDraw = async () => {
@@ -293,8 +314,17 @@ const Raffles = () => {
 
       {/* Prize selection */}
       <div className="m-6">
-        <h3 className="text-lg font-semibold mb-4">Select prize for each draw</h3>
-        {prizeInputs}
+        <h3 className="text-lg font-semibold mb-4">Select prize for the draw</h3>
+        <select
+          className="w-96 p-3 border rounded bg-slate-300 mb-6"
+          value={selectedPrizeId}
+          onChange={handlePrizeChange}
+        >
+          <option value="" disabled>Select a prize</option>
+          {prizeOptions.map((prize) => (
+            <option key={prize.id} value={prize.id}>{prize.PrizeName}</option>
+          ))}
+        </select>
       </div>
 
       {/* File upload */}
