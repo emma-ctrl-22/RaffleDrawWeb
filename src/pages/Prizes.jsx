@@ -1,148 +1,112 @@
 import React, { useState, useEffect } from 'react';
-import { prizesData } from '../assets/prizesData';
+import axios from 'axios';
 import Momo from '../assets/Momo.png';
 
 const Prizes = () => {
-  const { grand: initialGrand, weekly: initialWeekly, monthly: initialMonthly } = prizesData;
-
-  const [grand, setGrand] = useState(initialGrand);
-  const [weekly, setWeekly] = useState(initialWeekly);
-  const [monthly, setMonthly] = useState(initialMonthly);
+  const [grand, setGrand] = useState([]);
+  const [weekly, setWeekly] = useState([]);
+  const [monthly, setMonthly] = useState([]);
 
   const [newPrize, setNewPrize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [selectedPrizeType, setSelectedPrizeType] = useState('grand');
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
-  const [editType, setEditType] = useState(null);
+  const [editId, setEditId] = useState(null);
 
-  const handleAddPrize = () => {
-    if (newPrize && quantity > 0) {
-      const newPrizeObj = { grade: "Other Prizes", prize: newPrize, quantity, draws: 1 };
-      if (isEditing) {
-        switch (editType) {
-          case 'grand':
-            const updatedGrand = [...grand];
-            updatedGrand[editIndex] = newPrizeObj;
-            setGrand(updatedGrand);
-            break;
-          case 'weekly':
-            const updatedWeekly = [...weekly];
-            updatedWeekly[editIndex] = newPrizeObj;
-            setWeekly(updatedWeekly);
-            break;
-          case 'monthly':
-            const updatedMonthly = [...monthly];
-            updatedMonthly[editIndex] = newPrizeObj;
-            setMonthly(updatedMonthly);
-            break;
-          default:
-            break;
-        }
-        setIsEditing(false);
-        setEditIndex(null);
-        setEditType(null);
-      } else {
-        switch (selectedPrizeType) {
-          case 'grand':
-            setGrand([...grand, newPrizeObj]);
-            break;
-          case 'weekly':
-            setWeekly([...weekly, newPrizeObj]);
-            break;
-          case 'monthly':
-            setMonthly([...monthly, newPrizeObj]);
-            break;
-          default:
-            break;
-        }
-      }
-      setNewPrize('');
-      setQuantity(1);
+  const fetchPrizes = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/prizes/get-all');
+      const prizes = response.data;
+      setGrand(prizes.filter(prize => prize.Type === 'Grand'));
+      setWeekly(prizes.filter(prize => prize.Type === 'Weekly'));
+      setMonthly(prizes.filter(prize => prize.Type === 'Monthly'));
+    } catch (error) {
+      console.error('Error fetching prizes:', error);
     }
-  };
-
-  const handleDeletePrize = (type, index) => {
-    switch (type) {
-      case 'grand':
-        setGrand(grand.filter((_, i) => i !== index));
-        break;
-      case 'weekly':
-        setWeekly(weekly.filter((_, i) => i !== index));
-        break;
-      case 'monthly':
-        setMonthly(monthly.filter((_, i) => i !== index));
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleEditPrize = (type, index) => {
-    let prizeToEdit;
-    switch (type) {
-      case 'grand':
-        prizeToEdit = grand[index];
-        break;
-      case 'weekly':
-        prizeToEdit = weekly[index];
-        break;
-      case 'monthly':
-        prizeToEdit = monthly[index];
-        break;
-      default:
-        break;
-    }
-    setNewPrize(prizeToEdit.prize);
-    setQuantity(prizeToEdit.quantity);
-    setSelectedPrizeType(type);
-    setIsEditing(true);
-    setEditIndex(index);
-    setEditType(type);
   };
 
   useEffect(() => {
-    prizesData.grand = grand;
-    prizesData.weekly = weekly;
-    prizesData.monthly = monthly;
-  }, [grand, weekly, monthly]);
+    fetchPrizes();
+  }, []);
+
+  const handleAddPrize = async () => {
+    if (newPrize && quantity > 0) {
+      const newPrizeObj = { PrizeName: newPrize, Quantity: quantity, Type: selectedPrizeType.charAt(0).toUpperCase() + selectedPrizeType.slice(1) };
+      try {
+        if (isEditing) {
+          await axios.put(`http://localhost:3000/prizes/update/${editId}`, newPrizeObj);
+        } else {
+          await axios.post('http://localhost:3000/prizes/create', newPrizeObj);
+        }
+        fetchPrizes();
+        setNewPrize('');
+        setQuantity(1);
+        setIsEditing(false);
+        setEditIndex(null);
+        setEditId(null);
+      } catch (error) {
+        console.error('Error adding/updating prize:', error);
+      }
+    }
+  };
+
+  const handleDeletePrize = async (id, type) => {
+    try {
+      await axios.delete(`/prizes/delete/${id}`);
+      fetchPrizes();
+    } catch (error) {
+      console.error('Error deleting prize:', error);
+    }
+  };
+
+  const handleEditPrize = (prize, index, type) => {
+    setNewPrize(prize.PrizeName);
+    setQuantity(prize.Quantity);
+    setSelectedPrizeType(type);
+    setIsEditing(true);
+    setEditIndex(index);
+    setEditId(prize.id);
+  };
 
   const renderPrizes = (prizes, type) => (
     <div className="m-8 relative z-60">
       <h2 className="font-bold text-xl mb-4">{type.charAt(0).toUpperCase() + type.slice(1)} Prizes</h2>
-      <table className="w-full border-collapse">
-        <thead>
-          <tr>
-            <th className="border p-2">Grade</th>
-            <th className="border p-2">Prize</th>
-            <th className="border p-2">Quantity</th>
-            <th className="border p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {prizes.map((prize, index) => (
-            <tr key={index}>
-              <td className="border p-2">{prize.grade}</td>
-              <td className="border p-2">{prize.prize}</td>
-              <td className="border p-2">{prize.quantity}</td>
-              <td className="border p-2">
-                <button
-                  className="p-2 bg-blue-500 text-white rounded mr-2"
-                  onClick={() => handleEditPrize(type, index)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="p-2 bg-red-500 text-white rounded"
-                  onClick={() => handleDeletePrize(type, index)}
-                >
-                  Delete
-                </button>
-              </td>
+      {prizes.length > 0 ? (
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="border p-2">Prize</th>
+              <th className="border p-2">Quantity</th>
+              <th className="border p-2">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {prizes.map((prize, index) => (
+              <tr key={prize.id}>
+                <td className="border p-2">{prize.PrizeName}</td>
+                <td className="border p-2">{prize.Quantity}</td>
+                <td className="border p-2">
+                  <button
+                    className="p-2 bg-blue-500 text-white rounded mr-2"
+                    onClick={() => handleEditPrize(prize, index, type)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="p-2 bg-red-500 text-white rounded"
+                    onClick={() => handleDeletePrize(prize.id, type)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>No prizes added.</p>
+      )}
     </div>
   );
 
