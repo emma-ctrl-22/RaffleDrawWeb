@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast'
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+
 const UpcomingRaffles = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentEditIndex, setCurrentEditIndex] = useState(null);
@@ -9,6 +11,7 @@ const UpcomingRaffles = () => {
     winners: '',
   });
   const [draws, setDraws] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDraws = async () => {
@@ -27,28 +30,32 @@ const UpcomingRaffles = () => {
   }, []);
 
   const handleToggleAction = async (index) => {
-    const updatedDraws = [...draws];
-    const currentAction = updatedDraws[index].status;
+    const draw = draws[index];
+    if (draw.status === 'Pending') {
+      navigate('/winners', { state: { draw } });
+    } else {
+      const updatedDraws = [...draws];
+      const currentAction = updatedDraws[index].status;
 
-    if (currentAction === 'not started') {
-      updatedDraws[index].status = 'ongoing';
-    } else if (currentAction === 'ongoing') {
-      updatedDraws[index].status = 'not started';
-    }
+      if (currentAction === 'not started') {
+        updatedDraws[index].status = 'ongoing';
+      } else if (currentAction === 'ongoing') {
+        updatedDraws[index].status = 'not started';
+      }
 
-    setDraws(updatedDraws);
+      setDraws(updatedDraws);
 
-    // Send the updated status to the backend
-    try {
-      await fetch(`http://127.0.0.1:3000/draws/${updatedDraws[index].id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: updatedDraws[index].status }),
-      });
-    } catch (error) {
-      console.error('Error updating draw status:', error);
+      try {
+        await fetch(`http://127.0.0.1:3000/draws/${updatedDraws[index].id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: updatedDraws[index].status }),
+        });
+      } catch (error) {
+        console.error('Error updating draw status:', error);
+      }
     }
   };
 
