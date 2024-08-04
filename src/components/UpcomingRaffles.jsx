@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-
+import toast from 'react-hot-toast'
 const UpcomingRaffles = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentEditIndex, setCurrentEditIndex] = useState(null);
   const [editFormData, setEditFormData] = useState({
     name: '',
-    startDate: '',
+    drawType: '',
     winners: '',
   });
   const [draws, setDraws] = useState([]);
@@ -13,16 +13,10 @@ const UpcomingRaffles = () => {
   useEffect(() => {
     const fetchDraws = async () => {
       try {
-        // Retrieve the user ID from local storage
         const userId = JSON.parse(localStorage.getItem('user')).id;
-
-        // Fetch draws for the specific user
         const response = await fetch(`http://127.0.0.1:3000/draws/get-by-author/${userId}`);
         const fetchedDraws = await response.json();
-
-        // Filter draws with status "Pending"
         const pendingDraws = fetchedDraws.filter(draw => draw.status === 'Pending');
-        
         setDraws(pendingDraws);
       } catch (error) {
         console.error('Error fetching draws:', error);
@@ -32,7 +26,7 @@ const UpcomingRaffles = () => {
     fetchDraws();
   }, []);
 
-  const handleToggleAction = (index) => {
+  const handleToggleAction = async (index) => {
     const updatedDraws = [...draws];
     const currentAction = updatedDraws[index].status;
 
@@ -43,11 +37,26 @@ const UpcomingRaffles = () => {
     }
 
     setDraws(updatedDraws);
+
+    // Send the updated status to the backend
+    try {
+      await fetch(`http://127.0.0.1:3000/draws/${updatedDraws[index].id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: updatedDraws[index].status }),
+      });
+    } catch (error) {
+      console.error('Error updating draw status:', error);
+    }
   };
 
   const handleDeleteRaffle = async (index) => {
     try {
-      await window.electron.deleteDraw(draws[index].id);
+      await fetch(`http://127.0.0.1:3000/draws/${draws[index].id}`, {
+        method: 'DELETE',
+      });
       const updatedDraws = draws.filter((_, i) => i !== index);
       setDraws(updatedDraws);
     } catch (error) {
@@ -59,7 +68,7 @@ const UpcomingRaffles = () => {
     setCurrentEditIndex(index);
     setEditFormData({
       name: draws[index].DrawName,
-      startDate: draws[index].DrawType,
+      drawType: draws[index].DrawType,
       winners: draws[index].numberOfWinners,
     });
     setIsEditing(true);
@@ -78,10 +87,18 @@ const UpcomingRaffles = () => {
       const updatedDraw = {
         ...draws[currentEditIndex],
         DrawName: editFormData.name,
-        DrawType: editFormData.startDate,
+        DrawType: editFormData.drawType,
         numberOfWinners: editFormData.winners,
       };
-      await window.electron.editDraw(updatedDraw);
+
+      await fetch(`http://127.0.0.1:3000/draws/edit-draw/${updatedDraw.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedDraw),
+      });
+
       const updatedDraws = [...draws];
       updatedDraws[currentEditIndex] = updatedDraw;
       setDraws(updatedDraws);
@@ -115,11 +132,11 @@ const UpcomingRaffles = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Start Date</label>
+              <label className="block text-sm font-medium">Draw Type</label>
               <input
                 type="text"
-                name="startDate"
-                value={editFormData.startDate}
+                name="drawType"
+                value={editFormData.drawType}
                 onChange={handleEditFormChange}
                 className="w-full p-2 border rounded"
               />
