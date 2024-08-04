@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import UpcomingRaffle from '../assets/UpcominRaffles.json'
+
 const UpcomingRaffles = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentEditIndex, setCurrentEditIndex] = useState(null);
@@ -8,19 +8,27 @@ const UpcomingRaffles = () => {
     startDate: '',
     winners: '',
   });
-  const [selectedDraw, setSelectedDraw] = useState(null);
   const [draws, setDraws] = useState([]);
 
   useEffect(() => {
     const fetchDraws = async () => {
       try {
-        const fetchedDraws = await window.electron.fetchDraws();
-        setDraws(UpcomingRaffle);
-        console.log('Fetched Draws:', fetchedDraws);
+        // Retrieve the user ID from local storage
+        const userId = JSON.parse(localStorage.getItem('user')).id;
+
+        // Fetch draws for the specific user
+        const response = await fetch(`http://127.0.0.1:3000/draws/get-by-author/${userId}`);
+        const fetchedDraws = await response.json();
+
+        // Filter draws with status "Pending"
+        const pendingDraws = fetchedDraws.filter(draw => draw.status === 'Pending');
+        
+        setDraws(pendingDraws);
       } catch (error) {
         console.error('Error fetching draws:', error);
       }
     };
+
     fetchDraws();
   }, []);
 
@@ -50,9 +58,9 @@ const UpcomingRaffles = () => {
   const handleEditButtonClick = (index) => {
     setCurrentEditIndex(index);
     setEditFormData({
-      name: draws[index].drawName,
-      startDate: draws[index].drawType,
-      winners: draws[index].winners,
+      name: draws[index].DrawName,
+      startDate: draws[index].DrawType,
+      winners: draws[index].numberOfWinners,
     });
     setIsEditing(true);
   };
@@ -69,9 +77,9 @@ const UpcomingRaffles = () => {
     try {
       const updatedDraw = {
         ...draws[currentEditIndex],
-        drawName: editFormData.name,
-        drawType: editFormData.startDate,
-        winners: editFormData.winners,
+        DrawName: editFormData.name,
+        DrawType: editFormData.startDate,
+        numberOfWinners: editFormData.winners,
       };
       await window.electron.editDraw(updatedDraw);
       const updatedDraws = [...draws];
@@ -156,15 +164,15 @@ const UpcomingRaffles = () => {
         <tbody>
           {draws.map((draw, index) => (
             <tr key={draw.id}>
-              <td className="py-2 px-4 border-b">{draw.drawName}</td>
-              <td className="py-2 px-4 border-b">{draw.drawType}</td>
+              <td className="py-2 px-4 border-b">{draw.DrawName}</td>
+              <td className="py-2 px-4 border-b">{draw.DrawType}</td>
               <td className="py-2 px-4 border-b">
                 <small className="bg-yellow-500 text-black py-1 px-2 rounded">
-                {Array.isArray(draw.winners) && draw.winners.length === 0 ? `0/${draw.numberOfDraws}` : `${draw.winners.length}/${draw.numberOfDraws}`}
+                  {draw.numberOfWinners}
                 </small>
               </td>
               <td className="py-2 px-4 border-b">
-                {draw.status === 'not started' ? (
+                {draw.status === 'Pending' ? (
                   <button
                     className="bg-green-500 text-white py-1 px-3 rounded"
                     onClick={() => handleToggleAction(index)}
