@@ -123,7 +123,7 @@ const Winners = () => {
           onClick={handleEndDraw}
           className="py-2 px-4 bg-red-500 text-white rounded"
         >
-          End Draw
+          Save Draw
         </button>
       </div>
 
