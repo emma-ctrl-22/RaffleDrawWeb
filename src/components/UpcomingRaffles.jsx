@@ -212,14 +212,7 @@ const UpcomingRaffles = () => {
                   </button>
                 )}
               </td>
-              <td className="py-2 px-4 border-b">
-                <button
-                  className="bg-gray-500 text-white py-1 px-3 rounded"
-                  onClick={() => handleDeleteRaffle(index)}
-                >
-                  Delete
-                </button>
-              </td>
+             
               <td className="py-2 px-4 border-b">
                 <button
                   className="bg-blue-500 text-white py-1 px-3 rounded"
