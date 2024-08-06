@@ -16,7 +16,7 @@ const Prizes = () => {
 
   const fetchPrizes = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/prizes/get-all');
+      const response = await axios.get('https://raffledraw-backendapi.onrender.com/prizes/get-all');
       const prizes = response.data;
       setGrand(prizes.filter(prize => prize.Type === 'Grand'));
       setWeekly(prizes.filter(prize => prize.Type === 'Weekly'));
@@ -35,9 +35,9 @@ const Prizes = () => {
       const newPrizeObj = { PrizeName: newPrize, Quantity: quantity, Type: selectedPrizeType.charAt(0).toUpperCase() + selectedPrizeType.slice(1) };
       try {
         if (isEditing) {
-          await axios.put(`http://localhost:3000/prizes/update/${editId}`, newPrizeObj);
+          await axios.put(`https://raffledraw-backendapi.onrender.com/prizes/update/${editId}`, newPrizeObj);
         } else {
-          await axios.post('http://localhost:3000/prizes/create', newPrizeObj);
+          await axios.post('https://raffledraw-backendapi.onrender.com/prizes/create', newPrizeObj);
         }
         fetchPrizes();
         setNewPrize('');

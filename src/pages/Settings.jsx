@@ -12,7 +12,7 @@ const Settings = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:3000/users/get-all-users');
+      const response = await axios.get('https://raffledraw-backendapi.onrender.com/users/get-all-users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -23,7 +23,7 @@ const Settings = () => {
   const handleAddUser = async () => {
     if (newUser.username && newUser.password) {
       try {
-        await axios.post('http://localhost:3000/users/create-new-user', newUser);
+        await axios.post('https://raffledraw-backendapi.onrender.com/users/create-new-user', newUser);
         toast.success('User added successfully');
         fetchUsers(); // Refresh the user list
         setNewUser({ username: '', role: 'user', password: '' });
@@ -38,7 +38,7 @@ const Settings = () => {
 
   const handleDeactivateUser = async (id) => {
     try {
-      await axios.put(`http://127.0.0.1:3000/users/deactivate/${id}`);
+      await axios.put(`https://raffledraw-backendapi.onrender.com/users/deactivate/${id}`);
       toast.success('User deactivated successfully');
       fetchUsers(); // Refresh the user list
     } catch (error) {
