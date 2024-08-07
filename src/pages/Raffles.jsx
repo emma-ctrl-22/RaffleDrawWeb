@@ -154,7 +154,7 @@ const Raffles = () => {
       priceSelection: selectedPrizeId,
       author: userId,
       FilePath: filePath,
-      Category  : selectedCategoryType
+      PrizeCategory  : selectedCategoryType
     };
     console.log('Draw data:', drawData);
     try {
