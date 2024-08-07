@@ -99,7 +99,7 @@ const Settings = () => {
               <tr key={user.id} className={user.active ? '' : 'bg-gray-100'}>
                 <td className="py-2 px-4 border-b">{user.username}</td>
                 <td className="py-2 px-4 border-b">{user.role}</td>
-                <td className="py-2 px-4 border-b">{user.active ? 'Active' : 'Inactive'}</td>
+                <td className="py-2 px-4 border-b">{user.active ? 'Active' : 'Active'}</td>
                 <td className="py-2 px-4 border-b">
                   {user.active && (
                     <button
