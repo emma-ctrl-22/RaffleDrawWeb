@@ -79,6 +79,7 @@ const Prizes = () => {
             <tr>
               <th className="border p-2">Prize</th>
               <th className="border p-2">Quantity</th>
+              <th className="border p-2">Category</th>
               <th className="border p-2">Actions</th>
             </tr>
           </thead>
@@ -87,6 +88,7 @@ const Prizes = () => {
               <tr key={prize.id}>
                 <td className="border p-2">{prize.PrizeName}</td>
                 <td className="border p-2">{prize.Quantity}</td>
+                <td className="border p-2">{prize.PrizeCategory}</td>
                 <td className="border p-2">
                   <button
                     className="p-2 bg-blue-500 text-white rounded mr-2"
