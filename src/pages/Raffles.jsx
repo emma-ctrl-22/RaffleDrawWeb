@@ -331,9 +331,9 @@ const Raffles = () => {
           value={spinTime}
           onChange={(e) => setSpinTime(e.target.value)}
         >
-          <option value="15">15 seconds</option>
-          <option value="30">30 seconds</option>
-          <option value="45">45 seconds</option>
+          <option value={15}>15 seconds</option>
+          <option value={30}>30 seconds</option>
+          <option value={45}>45 seconds</option>
         </select>
       </div>
 
