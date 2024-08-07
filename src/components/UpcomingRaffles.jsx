@@ -255,36 +255,60 @@ const UpcomingRaffles = () => {
       </table>
       
       {showModal && selectedDraw && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
-            <h3 className="text-lg font-bold mb-4">Draw Information</h3>
-            <div className="space-y-2">
-              <div>
-                <strong>Name:</strong> {selectedDraw.DrawName}
-              </div>
-              <div>
-                <strong>Draw Type:</strong> {selectedDraw.DrawType}
-              </div>
-              <div>
-                <strong>Number of Winners:</strong> {selectedDraw.numberOfWinners}
-              </div>
-              <div>
-                <strong>Status:</strong> {selectedDraw.status}
-              </div>
-              <div>
-                <strong>Description:</strong> {selectedDraw.description}
-              </div>
-              {/* Add more fields as needed */}
-            </div>
-            <button
-              className="mt-4 bg-red-500 text-white py-2 px-4 rounded"
-              onClick={handleCloseModal}
-            >
-              Close
-            </button>
-          </div>
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
+      <h3 className="text-lg font-bold mb-4">Draw Information</h3>
+      <div className="grid grid-cols-2 gap-6">
+        <div>
+          <strong>Name:</strong> {selectedDraw.DrawName}
         </div>
-      )}
+        <div>
+          <strong>Draw Type:</strong> {selectedDraw.DrawType}
+        </div>
+        <div>
+          <strong>Number of Winners:</strong> {selectedDraw.numberOfWinners}
+        </div>
+        <div>
+          <strong>Status:</strong> {selectedDraw.status}
+        </div>
+        <div>
+          <strong>Description:</strong> {selectedDraw.description}
+        </div>
+        <div>
+          <strong>Spin Time:</strong> {selectedDraw.SpinTime} seconds
+        </div>
+        <div>
+          <strong>Draw Coverage:</strong> {selectedDraw.DrawCoverage}
+        </div>
+        <div>
+          <strong>RC Name:</strong> {selectedDraw.RCName}
+        </div>
+        <div>
+          <strong>Draw Setting:</strong> {selectedDraw.DrawSetting}
+        </div>
+        <div>
+          <strong>Price Selection:</strong> {selectedDraw.priceSelection}
+        </div>
+        <div className='mt-6'>
+          <strong>Author:</strong> {selectedDraw.Author.username}
+        </div>
+        <div>
+          <strong>Created At:</strong> {new Date(selectedDraw.createdAt).toLocaleString()}
+        </div>
+        <div>
+          <strong>Updated At:</strong> {new Date(selectedDraw.updatedAt).toLocaleString()}
+        </div>
+      </div>
+      <button
+        className="mt-4 bg-red-500 text-white py-2 px-4 rounded"
+        onClick={handleCloseModal}
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
