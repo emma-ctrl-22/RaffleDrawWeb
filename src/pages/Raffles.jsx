@@ -39,7 +39,7 @@ const Raffles = () => {
   useEffect(() => {
     const fetchPrizes = async () => {
       try {
-        const response = await axios.get('https://raffledraw-backendapi.onrender.com/prizes/get-all');
+        const response = await axios.get('https://raffledrawapi.onrender.com/prizes/get-all');
         console.log('Prizes:', response.data);
         setPrizesData(response.data);
       } catch (error) {
@@ -102,7 +102,7 @@ const Raffles = () => {
 
   const saveDrawToDatabase = async (drawData) => {
     try {
-      const response = await axios.post('https://raffledraw-backendapi.onrender.com/draws/create', drawData);
+      const response = await axios.post('https://raffledrawapi.onrender.com/draws/create', drawData);
       toast.success('Draw saved successfully!');
       // Reset form fields
       setNumberOfDraws(1);
@@ -130,7 +130,7 @@ const Raffles = () => {
       formData.append('file', selectedFile);
 
       try {
-        const response = await axios.post('https://raffledraw-backendapi.onrender.com/draws/upload', formData, {
+        const response = await axios.post('https://raffledrawapi.onrender.com/draws/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -159,7 +159,7 @@ const Raffles = () => {
     };
     console.log('Draw data:', drawData);
     try {
-      const response = await axios.post('https://raffledraw-backendapi.onrender.com/draws/create', drawData);
+      const response = await axios.post('https://raffledrawapi.onrender.com/draws/create', drawData);
       toast.success('Draw saved successfully!');
       // Reset form fields
       setNumberOfDraws(1);

@@ -13,7 +13,7 @@ const Login = () => {
   const loginUser = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('https://raffledraw-backendapi.onrender.com/users/login', {
+      const response = await axios.post('https://raffledrawapi.onrender.com/users/login', {
         username,
         password
       });

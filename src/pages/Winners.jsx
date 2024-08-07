@@ -21,7 +21,7 @@ const Winners = () => {
   useEffect(() => {
     const fetchCsvFile = async () => {
       try {
-        const response = await fetch(`https://raffledraw-backendapi.onrender.com/${draw.FilePath}`);
+        const response = await fetch(`https://raffledrawapi.onrender.com/${draw.FilePath}`);
         const csvFile = await response.blob();
         const reader = new FileReader();
         reader.onload = () => {
@@ -100,7 +100,7 @@ const Winners = () => {
     const payload = savedWinners.map(msisdn => ({ msisdn, drawId: draw.id }));
 
     try {
-      const response = await fetch('https://raffledraw-backendapi.onrender.com/winners/add-winners', {
+      const response = await fetch('https://raffledrawapi.onrender.com/winners/add-winners', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

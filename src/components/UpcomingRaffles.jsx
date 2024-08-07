@@ -19,7 +19,7 @@ const UpcomingRaffles = () => {
     const fetchDraws = async () => {
       try {
         const userId = JSON.parse(localStorage.getItem('user')).id;
-        const response = await fetch(`https://raffledraw-backendapi.onrender.com/draws/get-by-author/${userId}`);
+        const response = await fetch(`https://raffledrawapi.onrender.com/draws/get-by-author/${userId}`);
         const data = await response.json();
 
         // Log the response to see what you are receiving
@@ -64,7 +64,7 @@ const UpcomingRaffles = () => {
       setDraws(updatedDraws);
 
       try {
-        await fetch(`https://raffledraw-backendapi.onrender.com/draws/${updatedDraws[index].id}`, {
+        await fetch(`https://raffledrawapi.onrender.com/draws/${updatedDraws[index].id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ const UpcomingRaffles = () => {
 
   const handleDeleteRaffle = async (index) => {
     try {
-      await fetch(`https://raffledraw-backendapi.onrender.com/draws/${draws[index].id}`, {
+      await fetch(`https://raffledrawapi.onrender.com/draws/${draws[index].id}`, {
         method: 'DELETE',
       });
       const updatedDraws = draws.filter((_, i) => i !== index);
@@ -116,7 +116,7 @@ const UpcomingRaffles = () => {
         numberOfWinners: editFormData.winners,
       };
 
-      await fetch(`https://raffledraw-backendapi.onrender.com/draws/edit-draw/${updatedDraw.id}`, {
+      await fetch(`https://raffledrawapi.onrender.com/draws/edit-draw/${updatedDraw.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
