@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import Papa from 'papaparse';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
 const Winners = () => {
@@ -12,8 +12,10 @@ const Winners = () => {
 
   const [winners, setWinners] = useState([]);
   const [savedWinners, setSavedWinners] = useState([]);
-  const [remainingWinners, setRemainingWinners] = useState(0);
-  const [isRaffleComplete, setIsRaffleComplete] = useState(false);
+  const [remainingWinners, setRemainingWinners] = useState(draw.numberOfWinners);
+  const [allNumbers, setAllNumbers] = useState([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [slotValues, setSlotValues] = useState([]);
 
   useEffect(() => {
     const fetchCsvFile = async () => {
@@ -25,27 +27,7 @@ const Winners = () => {
           const csvData = reader.result;
           const parsedData = Papa.parse(csvData, { header: true });
           const msisdnData = [...new Set(parsedData.data.map(row => row.Msisdn).filter(Boolean))];
-          const shuffledData = msisdnData.sort(() => 0.5 - Math.random());
-          const initialWinners = shuffledData.slice(0, draw.numberOfWinners);
-          
-          // Simulate raffle animation
-          let currentIndex = 0;
-          const raffleInterval = setInterval(() => {
-            if (currentIndex < initialWinners.length) {
-              setWinners(prev => [...prev, initialWinners[currentIndex]]);
-              currentIndex++;
-              confetti({
-                particleCount: 200,
-                spread: 70,
-                origin: { y: 0.6 }
-              });
-            } else {
-              clearInterval(raffleInterval);
-              setIsRaffleComplete(true);
-            }
-          }, 3000);
-
-          setRemainingWinners(draw.numberOfWinners);
+          setAllNumbers(msisdnData);
         };
         reader.readAsText(csvFile);
       } catch (error) {
@@ -54,35 +36,54 @@ const Winners = () => {
     };
 
     fetchCsvFile();
-  }, [draw.FilePath, draw.numberOfWinners]);
+  }, [draw.FilePath]);
+
+  useEffect(() => {
+    if (isDrawing) {
+      const interval = setInterval(() => {
+        setSlotValues(Array(draw.numberOfWinners).fill(0).map(() => 
+          allNumbers[Math.floor(Math.random() * allNumbers.length)]
+        ));
+      }, 100);
+
+      return () => clearInterval(interval);
+    }
+  }, [isDrawing, allNumbers, draw.numberOfWinners]);
+
+  const handleStartDraw = () => {
+    setIsDrawing(true);
+    setTimeout(() => {
+      setIsDrawing(false);
+      pickWinners();
+    }, 5000);
+  };
+
+  const pickWinners = () => {
+    const newWinners = shuffleArray(allNumbers).slice(0, draw.numberOfWinners);
+    setWinners(newWinners);
+    setSlotValues(newWinners);
+    setRemainingWinners(draw.numberOfWinners);
+  };
+
+  const shuffleArray = (array) => {
+    return array.sort(() => Math.random() - 0.5);
+  };
 
   const handleAddWinner = (msisdn) => {
-    setSavedWinners([...savedWinners, msisdn]);
-    setWinners(winners.filter(winner => winner !== msisdn));
-    setRemainingWinners(remainingWinners - 1);
+    if (savedWinners.length < draw.numberOfWinners) {
+      setSavedWinners([...savedWinners, msisdn]);
+      setWinners(winners.filter(winner => winner !== msisdn));
+      setRemainingWinners(remainingWinners - 1);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
   };
 
   const handleRerunDraw = () => {
-    const fetchCsvFile = async () => {
-      try {
-        const response = await fetch(`https://raffledraw-backendapi.onrender.com${draw.FilePath}`);
-        const csvFile = await response.blob();
-        const reader = new FileReader();
-        reader.onload = () => {
-          const csvData = reader.result;
-          const parsedData = Papa.parse(csvData, { header: true });
-          const msisdnData = [...new Set(parsedData.data.map(row => row.Msisdn).filter(Boolean))]; // Extracting unique Msisdn values
-          const shuffledData = msisdnData.sort(() => 0.5 - Math.random());
-          const newWinners = shuffledData.slice(0, remainingWinners + 1);
-          setWinners(newWinners);
-        };
-        reader.readAsText(csvFile);
-      } catch (error) {
-        console.error('Error fetching CSV file:', error);
-      }
-    };
-
-    fetchCsvFile();
+    pickWinners();
   };
 
   const handleEndDraw = async () => {
@@ -115,53 +116,71 @@ const Winners = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="w-full p-6 bg-yellow-400 min-h-screen text-white"  
+      className="w-full p-6 bg-yellow-400 min-h-screen text-white"
     >
-    
-      <motion.div 
-        className="mb-6 p-4 bg-white bg-opacity-20 rounded-lg shadow-lg backdrop-blur-md"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        <h2 className="text-3xl font-bold mb-4">{draw.DrawName}</h2>
-        <p><strong>Spin Time:</strong> {draw.SpinTime}</p>
-        <p><strong>Draw Type:</strong> {draw.DrawType}</p>
-        <p><strong>Coverage:</strong> {draw.DrawCoverage}</p>
-        <p><strong>Region:</strong> {draw.RCName}</p>
-        <p><strong>Setting:</strong> {draw.DrawSetting}</p>
-        <p><strong>Prize:</strong> {draw.priceSelection}</p>
-        <p><strong>Status:</strong> {draw.status}</p>
-      </motion.div>
-
+      <Toaster />
+      
       <motion.h2 
-        className="text-4xl font-bold mb-6 text-center"
+        className="text-4xl font-bold mb-6 text-center text-black"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
       >
-        Winners Announcement
+        {draw.DrawName} - Winners Draw
       </motion.h2>
 
-      <AnimatePresence>
-        {!isRaffleComplete && (
-          <motion.div 
-            className="text-center text-3xl font-bold mb-8"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+      {/* Jackpot Machine Interface */}
+      <motion.div 
+        className="mb-8 p-6 bg-white bg-opacity-20 rounded-lg shadow-lg backdrop-blur-md"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <div className="flex justify-center space-x-4">
+          {Array(draw.numberOfWinners).fill(0).map((_, index) => (
+            <motion.div
+              key={index}
+              className=" w-40 h-48 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden"
+              initial={{ rotateX: 180 }}
+              animate={{ rotateX: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
+            >
+              <motion.div
+                className="text-xl font-bold"
+                animate={{ y: isDrawing ? [0, -20, 0] : 0 }}
+                transition={{ repeat: Infinity, duration: 0.2 }}
+              >
+                {slotValues[index] || '-----'}
+              </motion.div>
+            </motion.div>
+          ))}
+        </div>
+        <motion.div
+          className="mt-6 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleStartDraw}
+            disabled={isDrawing}
+            className="py-2 px-4 bg-blue-500 text-black rounded hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50"
           >
-            Drawing winners...
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {isDrawing ? 'Drawing...' : 'Start Draw'}
+          </motion.button>
+        </motion.div>
+      </motion.div>
 
+      {/* Winners Section */}
       <motion.div 
         className="mb-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.7 }}
       >
-        <h2 className="text-2xl font-bold mb-4">Winners</h2>
+        <h2 className="text-2xl font-bold mb-4 text-black">Winners</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {winners.map((winner, idx) => (
             <motion.div
@@ -171,12 +190,12 @@ const Winners = () => {
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 260, damping: 20, delay: idx * 0.1 }}
             >
-              <p className="text-xl mb-2">{winner}</p>
+              <p className="text-xl mb-2 text-black">{winner}</p>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleAddWinner(winner)}
-                className="py-1 px-3 bg-green-500 text-white rounded hover:bg-green-600 transition-colors duration-200"
+                className="py-1 px-3 bg-green-500 text-black rounded hover:bg-green-600 transition-colors duration-200"
               >
                 Add Winner
               </motion.button>
@@ -185,13 +204,14 @@ const Winners = () => {
         </div>
       </motion.div>
 
+      {/* Saved Winners Section */}
       <motion.div 
         className="mb-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.7 }}
+        transition={{ delay: 0.9 }}
       >
-        <h2 className="text-2xl font-bold mb-4">Saved Winners</h2>
+        <h2 className="text-2xl font-bold mb-4 text-black">Saved Winners</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {savedWinners.map((savedWinner, idx) => (
             <motion.div
@@ -201,58 +221,34 @@ const Winners = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
             >
-              <p className="text-xl">{savedWinner}</p>
+              <p className="text-xl text-black">{savedWinner}</p>
             </motion.div>
           ))}
         </div>
       </motion.div>
 
+      {/* Rerun and End Draw Buttons */}
       <motion.div 
-        className="mt-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.9 }}
-      >
-        <h3 className="text-lg font-semibold mb-2">Uploaded CSV File</h3>
-        <p>{draw.FilePath.split('/').pop()}</p>
-      </motion.div>
-
-      <motion.div 
-        className="mt-6"
+        className="mt-6 flex justify-center space-x-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.1 }}
       >
-        <h3 className="text-lg font-semibold mb-2">Rerun Draw</h3>
-        <input
-          type="number"
-          value={remainingWinners}
-          readOnly
-          className="w-96 p-3 border rounded bg-white bg-opacity-20 mb-4"
-        />
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleRerunDraw}
-          className="py-2 px-4 bg-yellow-500 ml-2 text-white rounded hover:bg-blue-600 transition-colors duration-200"
+          className="py-2 px-4 bg-yellow-500 text-black rounded hover:bg-yellow-600 transition-colors duration-200"
         >
           Rerun Draw
         </motion.button>
-      </motion.div>
-
-      <motion.div 
-        className="mt-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.3 }}
-      >
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleEndDraw}
-          className="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition-colors duration-200"
+          className="py-2 px-4 bg-red-500 text-black rounded hover:bg-red-600 transition-colors duration-200"
         >
-          Save Draw
+          End Draw
         </motion.button>
       </motion.div>
     </motion.div>
