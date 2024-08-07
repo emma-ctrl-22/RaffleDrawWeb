@@ -58,28 +58,28 @@ const Report = () => {
   return (
     <div className="p-4">
       <div className="font-bold pl-2 pt-4">Report</div>
-      <table className="min-w-full bg-white">
+      <table className="min-w-full bg-white border border-gray-200 border-collapse">
         <thead>
-          <tr>
-            <th className="py-2">ID</th>
-            <th className="py-2">Draw Name</th>
-            <th className="py-2">Draw Type</th>
-            <th className="py-2">Status</th>
+          <tr className="bg-gray-100">
+            <th className="py-2 px-4 border border-gray-200">ID</th>
+            <th className="py-2 px-4 border border-gray-200">Draw Name</th>
+            <th className="py-2 px-4 border border-gray-200">Draw Type</th>
+            <th className="py-2 px-4 border border-gray-200">Status</th>
           </tr>
         </thead>
         <tbody>
           {draws && draws.length > 0 ? (
             draws.map(draw => (
-              <tr key={draw.id} className="cursor-pointer" onClick={() => handleRowClick(draw)}>
-                <td className="py-2">{draw.id}</td>
-                <td className="py-2">{draw.DrawName}</td>
-                <td className="py-2">{draw.DrawType}</td>
-                <td className="py-2">{draw.status}</td>
+              <tr key={draw.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleRowClick(draw)}>
+                <td className="py-2 px-4 border border-gray-200">{draw.id}</td>
+                <td className="py-2 px-4 border border-gray-200">{draw.DrawName}</td>
+                <td className="py-2 px-4 border border-gray-200">{draw.DrawType}</td>
+                <td className="py-2 px-4 border border-gray-200">{draw.status}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="4" className="py-2 text-center">No draws available</td>
+              <td colSpan="4" className="py-2 px-4 text-center border border-gray-200">No draws available</td>
             </tr>
           )}
         </tbody>
