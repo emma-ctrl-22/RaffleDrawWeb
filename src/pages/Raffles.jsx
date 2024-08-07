@@ -64,9 +64,9 @@ const Raffles = () => {
     setSelectedArea('');
   };
 
-  // const handleCategoryTypeChange = (type) => {
-  //   setSelectedCategoryType(type);
-  // };
+  const handleCategoryTypeChange = (type) => {
+    setSelectedCategoryType(type);
+  };
 
   const handleDrawButtonClick = (buttonName) => {
     setSelectedDrawButton(buttonName);
@@ -230,7 +230,7 @@ const Raffles = () => {
       </div>
 
       {/* Category type */}
-      {/* <div className="m-6">
+      <div className="m-6">
         <h3 className="text-lg font-semibold mb-4">Category type</h3>
         <div className="flex space-x-6 w-96">
           {[1, 2, 3].map((type) => (
@@ -243,7 +243,7 @@ const Raffles = () => {
             </button>
           ))}
         </div>
-      </div> */}
+      </div>
 
       {/* Region selection */}
       <div className="m-6">

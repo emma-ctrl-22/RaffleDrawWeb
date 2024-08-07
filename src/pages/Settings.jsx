@@ -85,22 +85,22 @@ const Settings = () => {
       </div>
       <div>
         <h2 className="font-semibold mb-2">User List</h2>
-        <table className="min-w-full bg-white border border-gray-300">
+        <table className="min-w-full bg-white border border-gray-200 border-collapse">
           <thead>
-            <tr>
-              <th className="py-2 border-b">Username</th>
-              <th className="py-2 border-b">Role</th>
-              <th className="py-2 border-b">Status</th>
-              <th className="py-2 border-b">Actions</th>
+          <tr className="bg-gray-100">
+              <th className="py-2 px-4 border border-gray-200">Username</th>
+              <th className="py-2 px-4 border border-gray-200">Role</th>
+              <th className="py-2 px-4 border border-gray-200">Status</th>
+              <th className="py-2 px-4 border border-gray-200">Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.map((user) => (
-              <tr key={user.id} className={user.active ? '' : 'bg-gray-100'}>
-                <td className="py-2 px-4 border-b">{user.username}</td>
-                <td className="py-2 px-4 border-b">{user.role}</td>
-                <td className="py-2 px-4 border-b">{user.active ? 'Active' : 'Active'}</td>
-                <td className="py-2 px-4 border-b">
+              <tr key={user.id} className={user.active ? '' : 'bg-white'}>
+                <td className="py-2 px-4 border border-gray-200">{user.username}</td>
+                <td className="py-2 px-4 border border-gray-200">{user.role}</td>
+                <td className="py-2 px-4 border border-gray-200">{user.active ? 'Active' : 'Active'}</td>
+                <td className="py-2 px-4 border border-gray-200">
                   {user.active && (
                     <button
                       onClick={() => handleDeactivateUser(user.id)}
