@@ -11,7 +11,7 @@ const ResultsTable = () => {
         const userId = JSON.parse(localStorage.getItem('user')).id;
 
         // Fetch draws for the specific user
-        const response = await fetch(`https://raffledrawapi.onrender.com/draws/get-by-author/${userId}`);
+        const response = await fetch(`https://raffledrawapi.onrender.com/draws/get-all`);
         const fetchedDraws = await response.json();
 
         // Filter draws with status "Pending"
