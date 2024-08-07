@@ -54,7 +54,7 @@ const Prizes = () => {
 
   const handleDeletePrize = async (id, type) => {
     try {
-      await axios.delete(`/prizes/delete/${id}`);
+      await axios.delete(`https://raffledrawapi.onrender.com/prizes/delete/${id}`);
       fetchPrizes();
     } catch (error) {
       console.error('Error deleting prize:', error);
