@@ -19,7 +19,7 @@ const UpcomingRaffles = () => {
     const fetchDraws = async () => {
       try {
         const userId = JSON.parse(localStorage.getItem('user')).id;
-        const response = await fetch(`https://raffledrawapi.onrender.com/draws/get-by-author/${userId}`);
+        const response = await fetch(`https://raffledrawapi.onrender.com/draws/get-all`);
         const data = await response.json();
 
         // Log the response to see what you are receiving
