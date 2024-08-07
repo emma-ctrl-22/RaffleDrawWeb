@@ -13,6 +13,7 @@ const Prizes = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [editId, setEditId] = useState(null);
+  const [PrizeCategory,setPrizecategory] = useState(1)
 
   const fetchPrizes = async () => {
     try {
@@ -32,7 +33,7 @@ const Prizes = () => {
 
   const handleAddPrize = async () => {
     if (newPrize && quantity > 0) {
-      const newPrizeObj = { PrizeName: newPrize, Quantity: quantity, Type: selectedPrizeType.charAt(0).toUpperCase() + selectedPrizeType.slice(1) };
+      const newPrizeObj = { PrizeName: newPrize, Quantity: quantity, Type: selectedPrizeType.charAt(0).toUpperCase() + selectedPrizeType.slice(1) ,PrizeCategory:PrizeCategory};
       try {
         if (isEditing) {
           await axios.put(`https://raffledrawapi.onrender.com/prizes/update/${editId}`, newPrizeObj);
@@ -140,6 +141,15 @@ const Prizes = () => {
           <option value="grand">Grand Prize</option>
           <option value="weekly">Weekly Prize</option>
           <option value="monthly">Monthly Prize</option>
+        </select>
+        <select
+          className="p-2 border rounded mr-4"
+          value={PrizeCategory}
+          onChange={(e) => setPrizecategory(e.target.value)}
+        >
+          <option value={1}>Category 1</option>
+          <option value={2}>Category 2</option>
+          <option value={3}>Category 3</option>
         </select>
         <button
           className="p-2 bg-yellow-400 text-black rounded"
