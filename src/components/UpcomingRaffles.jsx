@@ -11,17 +11,34 @@ const UpcomingRaffles = () => {
     winners: '',
   });
   const [draws, setDraws] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedDraw, setSelectedDraw] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDraws = async () => {
       try {
         const userId = JSON.parse(localStorage.getItem('user')).id;
-
         const response = await fetch(`https://raffledraw-backendapi.onrender.com/draws/get-by-author/${userId}`);
-        const fetchedDraws = await response.json();
-        const pendingDraws = fetchedDraws.filter(draw => draw.status === 'Pending');
+        const data = await response.json();
+
+        // Log the response to see what you are receiving
+        console.log('API response:', data);
+
+        // Check if data is an array or an object
+        let drawsArray = [];
+        if (Array.isArray(data)) {
+          drawsArray = data;
+        } else if (data && typeof data === 'object') {
+          drawsArray = [data];
+        } else {
+          console.error('Unexpected response format:', data);
+        }
+
+        const pendingDraws = drawsArray.filter(draw => draw.status === 'Pending');
+        console.log('Pending draws:', pendingDraws);
         setDraws(pendingDraws);
+
       } catch (error) {
         console.error('Error fetching draws:', error);
       }
@@ -110,6 +127,7 @@ const UpcomingRaffles = () => {
       const updatedDraws = [...draws];
       updatedDraws[currentEditIndex] = updatedDraw;
       setDraws(updatedDraws);
+      console.log('Draw updated:', updatedDraw);
       setIsEditing(false);
       setCurrentEditIndex(null);
     } catch (error) {
@@ -120,6 +138,16 @@ const UpcomingRaffles = () => {
   const handleCancelEdit = () => {
     setIsEditing(false);
     setCurrentEditIndex(null);
+  };
+
+  const handleShowModal = (draw) => {
+    setSelectedDraw(draw);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedDraw(null);
   };
 
   return (
@@ -188,7 +216,7 @@ const UpcomingRaffles = () => {
         </thead>
         <tbody>
           {draws.map((draw, index) => (
-            <tr key={draw.id}>
+            <tr key={draw.id} onClick={() => handleShowModal(draw)}>
               <td className="py-2 px-4 border-b">{draw.DrawName}</td>
               <td className="py-2 px-4 border-b">{draw.DrawType}</td>
               <td className="py-2 px-4 border-b">
@@ -213,7 +241,6 @@ const UpcomingRaffles = () => {
                   </button>
                 )}
               </td>
-             
               <td className="py-2 px-4 border-b">
                 <button
                   className="bg-blue-500 text-white py-1 px-3 rounded"
@@ -226,6 +253,38 @@ const UpcomingRaffles = () => {
           ))}
         </tbody>
       </table>
+      
+      {showModal && selectedDraw && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
+            <h3 className="text-lg font-bold mb-4">Draw Information</h3>
+            <div className="space-y-2">
+              <div>
+                <strong>Name:</strong> {selectedDraw.DrawName}
+              </div>
+              <div>
+                <strong>Draw Type:</strong> {selectedDraw.DrawType}
+              </div>
+              <div>
+                <strong>Number of Winners:</strong> {selectedDraw.numberOfWinners}
+              </div>
+              <div>
+                <strong>Status:</strong> {selectedDraw.status}
+              </div>
+              <div>
+                <strong>Description:</strong> {selectedDraw.description}
+              </div>
+              {/* Add more fields as needed */}
+            </div>
+            <button
+              className="mt-4 bg-red-500 text-white py-2 px-4 rounded"
+              onClick={handleCloseModal}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

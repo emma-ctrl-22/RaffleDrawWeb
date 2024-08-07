@@ -40,6 +40,7 @@ const Raffles = () => {
     const fetchPrizes = async () => {
       try {
         const response = await axios.get('https://raffledraw-backendapi.onrender.com/prizes/get-all');
+        console.log('Prizes:', response.data);
         setPrizesData(response.data);
       } catch (error) {
         console.error('Error fetching prizes:', error);
@@ -63,9 +64,9 @@ const Raffles = () => {
     setSelectedArea('');
   };
 
-  const handleCategoryTypeChange = (type) => {
-    setSelectedCategoryType(type);
-  };
+  // const handleCategoryTypeChange = (type) => {
+  //   setSelectedCategoryType(type);
+  // };
 
   const handleDrawButtonClick = (buttonName) => {
     setSelectedDrawButton(buttonName);
@@ -154,7 +155,7 @@ const Raffles = () => {
       priceSelection: selectedPrizeId,
       author: userId,
       FilePath: filePath,
-      PrizeCategory  : selectedCategoryType
+      // PrizeCategory  : selectedCategoryType
     };
     console.log('Draw data:', drawData);
     try {
@@ -229,7 +230,7 @@ const Raffles = () => {
       </div>
 
       {/* Category type */}
-      <div className="m-6">
+      {/* <div className="m-6">
         <h3 className="text-lg font-semibold mb-4">Category type</h3>
         <div className="flex space-x-6 w-96">
           {[1, 2, 3].map((type) => (
@@ -242,7 +243,7 @@ const Raffles = () => {
             </button>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* Region selection */}
       <div className="m-6">
