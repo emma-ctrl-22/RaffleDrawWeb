@@ -18,7 +18,7 @@ const Winners = () => {
   useEffect(() => {
     const fetchCsvFile = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:3000${draw.FilePath}`);
+        const response = await fetch(`https://raffledraw-backendapi.onrender.com/${draw.FilePath}`);
         const csvFile = await response.blob();
         const reader = new FileReader();
         reader.onload = () => {
@@ -43,7 +43,7 @@ const Winners = () => {
               clearInterval(raffleInterval);
               setIsRaffleComplete(true);
             }
-          }, 500);
+          }, 3000);
 
           setRemainingWinners(draw.numberOfWinners);
         };
@@ -73,7 +73,7 @@ const Winners = () => {
           const parsedData = Papa.parse(csvData, { header: true });
           const msisdnData = [...new Set(parsedData.data.map(row => row.Msisdn).filter(Boolean))]; // Extracting unique Msisdn values
           const shuffledData = msisdnData.sort(() => 0.5 - Math.random());
-          const newWinners = shuffledData.slice(0, remainingWinners);
+          const newWinners = shuffledData.slice(0, remainingWinners + 1);
           setWinners(newWinners);
         };
         reader.readAsText(csvFile);
@@ -115,8 +115,9 @@ const Winners = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="w-full p-6 bg-gradient-to-br from-yellow-500 to-indigo-600 min-h-screen text-white"
+      className="w-full p-6 bg-yellow-400 min-h-screen text-white"  
     >
+    
       <motion.div 
         className="mb-6 p-4 bg-white bg-opacity-20 rounded-lg shadow-lg backdrop-blur-md"
         initial={{ y: -50, opacity: 0 }}
