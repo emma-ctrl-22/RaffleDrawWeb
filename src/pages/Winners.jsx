@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import Papa from 'papaparse';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
 const Winners = () => {
@@ -15,7 +15,8 @@ const Winners = () => {
   const [remainingWinners, setRemainingWinners] = useState(draw.numberOfWinners);
   const [allNumbers, setAllNumbers] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [slotValues, setSlotValues] = useState([]);
+  const [slotValues, setSlotValues] = useState(Array(draw.numberOfWinners).fill('-----'));
+  const [animationKey, setAnimationKey] = useState(0);
 
   useEffect(() => {
     const fetchCsvFile = async () => {
@@ -28,6 +29,7 @@ const Winners = () => {
           const parsedData = Papa.parse(csvData, { header: true });
           const msisdnData = [...new Set(parsedData.data.map(row => row.Msisdn).filter(Boolean))];
           setAllNumbers(msisdnData);
+          setSlotValues(Array(draw.numberOfWinners).fill('-----'));
         };
         reader.readAsText(csvFile);
       } catch (error) {
@@ -36,22 +38,21 @@ const Winners = () => {
     };
 
     fetchCsvFile();
-  }, [draw.FilePath]);
+  }, [draw.FilePath, draw.numberOfWinners]);
 
   useEffect(() => {
     if (isDrawing) {
       const interval = setInterval(() => {
-        setSlotValues(Array(draw.numberOfWinners).fill(0).map(() => 
-          allNumbers[Math.floor(Math.random() * allNumbers.length)]
-        ));
+        setSlotValues(shuffleArray(allNumbers).slice(0, remainingWinners));
       }, 100);
 
       return () => clearInterval(interval);
     }
-  }, [isDrawing, allNumbers, draw.numberOfWinners]);
+  }, [isDrawing, allNumbers, remainingWinners]);
 
   const handleStartDraw = () => {
     setIsDrawing(true);
+    setAnimationKey(prevKey => prevKey + 1);
     setTimeout(() => {
       setIsDrawing(false);
       pickWinners();
@@ -59,14 +60,18 @@ const Winners = () => {
   };
 
   const pickWinners = () => {
-    const newWinners = shuffleArray(allNumbers).slice(0, draw.numberOfWinners);
+    const newWinners = shuffleArray(allNumbers).slice(0, remainingWinners);
     setWinners(newWinners);
     setSlotValues(newWinners);
-    setRemainingWinners(draw.numberOfWinners);
   };
 
   const shuffleArray = (array) => {
-    return array.sort(() => Math.random() - 0.5);
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   };
 
   const handleAddWinner = (msisdn) => {
@@ -83,7 +88,12 @@ const Winners = () => {
   };
 
   const handleRerunDraw = () => {
-    pickWinners();
+    setIsDrawing(true);
+    setAnimationKey(prevKey => prevKey + 1);
+    setTimeout(() => {
+      setIsDrawing(false);
+      pickWinners();
+    }, 5000);
   };
 
   const handleEndDraw = async () => {
@@ -129,7 +139,6 @@ const Winners = () => {
         {draw.DrawName} - Winners Draw
       </motion.h2>
 
-      {/* Jackpot Machine Interface */}
       <motion.div 
         className="mb-8 p-6 bg-white bg-opacity-20 rounded-lg shadow-lg backdrop-blur-md"
         initial={{ y: -50, opacity: 0 }}
@@ -137,43 +146,55 @@ const Winners = () => {
         transition={{ delay: 0.2 }}
       >
         <div className="flex justify-center space-x-4">
-          {Array(draw.numberOfWinners).fill(0).map((_, index) => (
+          <AnimatePresence mode="wait">
             <motion.div
-              key={index}
-              className=" w-40 h-48 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden"
-              initial={{ rotateX: 180 }}
-              animate={{ rotateX: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
+              key={animationKey}
+              className="flex justify-center space-x-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              <motion.div
-                className="text-xl font-bold"
-                animate={{ y: isDrawing ? [0, -20, 0] : 0 }}
-                transition={{ repeat: Infinity, duration: 0.2 }}
-              >
-                {slotValues[index] || '-----'}
-              </motion.div>
+              {slotValues.slice(0, remainingWinners).map((value, index) => (
+                <motion.div
+                  key={index}
+                  className="w-40 h-48 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden"
+                  initial={{ rotateX: 180 }}
+                  animate={{ rotateX: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                >
+                  <motion.div
+                    className="text-xl font-bold"
+                    animate={{ y: isDrawing ? [0, -20, 0] : 0 }}
+                    transition={{ repeat: Infinity, duration: 0.2 }}
+                  >
+                    {value}
+                  </motion.div>
+                </motion.div>
+              ))}
             </motion.div>
-          ))}
+          </AnimatePresence>
         </div>
-        <motion.div
-          className="mt-6 text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleStartDraw}
-            disabled={isDrawing}
-            className="py-2 px-4 bg-gray-800 text-white rounded hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50"
+        {remainingWinners > 0 && (
+          <motion.div
+            className="mt-6 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
           >
-            {isDrawing ? 'Drawing...' : 'Start Draw'}
-          </motion.button>
-        </motion.div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleStartDraw}
+              disabled={isDrawing}
+              className="py-2 px-4 bg-gray-800 text-white rounded hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50"
+            >
+              {isDrawing ? 'Drawing...' : 'Start Draw'}
+            </motion.button>
+          </motion.div>
+        )}
       </motion.div>
 
-      {/* Winners Section */}
       <motion.div 
         className="mb-8"
         initial={{ opacity: 0 }}
@@ -195,7 +216,7 @@ const Winners = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleAddWinner(winner)}
-                className="py-1 px-3 bg-green-500 text-black rounded hover:bg-green-600 transition-colors duration-200"
+                className="py-1 px-3 bg-gray-800 text-white rounded hover:bg-green-600 transition-colors duration-200"
               >
                 Add Winner
               </motion.button>
@@ -204,7 +225,6 @@ const Winners = () => {
         </div>
       </motion.div>
 
-      {/* Saved Winners Section */}
       <motion.div 
         className="mb-8"
         initial={{ opacity: 0 }}
@@ -227,21 +247,23 @@ const Winners = () => {
         </div>
       </motion.div>
 
-      {/* Rerun and End Draw Buttons */}
       <motion.div 
         className="mt-6 flex justify-center space-x-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.1 }}
       >
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleRerunDraw}
-          className="py-2 px-4 bg-yellow-500 text-black rounded hover:bg-yellow-600 transition-colors duration-200"
-        >
-          Rerun Draw
-        </motion.button>
+        {remainingWinners > 0 && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleRerunDraw}
+            disabled={isDrawing}
+            className="py-2 px-4 bg-yellow-500 text-black rounded hover:bg-yellow-600 transition-colors duration-200 disabled:opacity-50"
+          >
+            Rerun Draw
+          </motion.button>
+        )}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
