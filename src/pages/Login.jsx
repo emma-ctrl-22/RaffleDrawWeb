@@ -45,7 +45,7 @@ const Login = () => {
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex justify-between items-center ">
-        <img src={mtn} alt="Logo 2" className="h-16 w-18" />
+        <img src={mtn} alt="Logo 2" className="h-24 w-18" />
         <img src={Momo} alt="Logo 1" className="h-12" />
       </div>
       <h2 className="text-center text-2xl font-bold text-gray-900">Log in</h2>
