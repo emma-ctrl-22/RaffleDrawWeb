@@ -55,7 +55,7 @@ const SideNav = () => {
         <ul className="pt-2 pb-4 space-y-1 text-sm">
           <NavItem to="/dashboard" icon={<FaHome className='ml-4' />} label="Dashboard" />
           <NavItem to="/raffles" icon={<FaTicketAlt className='ml-4' />} label="Draws" />
-          <NavItem to="/winners" icon={<FaTrophy className='ml-4' />} label="Winners" isDisabled={userRole === 'user'} />
+          
           
           {userRole === 'admin' && (
             <>
