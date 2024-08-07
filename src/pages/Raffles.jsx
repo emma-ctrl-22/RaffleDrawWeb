@@ -7,6 +7,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Category } from '@mui/icons-material';
 
 const Raffles = () => {
   const [selectedRegionButton, setSelectedRegionButton] = useState('National');
@@ -23,6 +24,7 @@ const Raffles = () => {
   const [prizesData, setPrizesData] = useState([]);
   const [userId, setUserId] = useState(null);
   const [selectedPrizeId, setSelectedPrizeId] = useState('');
+  const [selectedCategoryType, setSelectedCategoryType] = useState(1);
 
   useEffect(() => {
     const userString = localStorage.getItem('user');
@@ -59,6 +61,10 @@ const Raffles = () => {
     setSelectedRegion('');
     setSelectedCounty('');
     setSelectedArea('');
+  };
+
+  const handleCategoryTypeChange = (type) => {
+    setSelectedCategoryType(type);
   };
 
   const handleDrawButtonClick = (buttonName) => {
@@ -121,7 +127,7 @@ const Raffles = () => {
     if (selectedFile) {
       const formData = new FormData();
       formData.append('file', selectedFile);
-  
+
       try {
         const response = await axios.post('https://raffledraw-backendapi.onrender.com/draws/upload', formData, {
           headers: {
@@ -136,20 +142,21 @@ const Raffles = () => {
         return;
       }
     }
-  
+
     const drawData = {
       DrawName: drawName,
       DrawSetting: selectedRegionButton,
-      DrawCoverage: selectedDrawType ,
+      DrawCoverage: selectedDrawType,
       DrawType: selectedDrawButton,
       SpinTime: spinTime,
       numberOfWinners: numberOfDraws,
       RCName: selectedArea,
       priceSelection: selectedPrizeId,
       author: userId,
-      FilePath: filePath
+      FilePath: filePath,
+      Category  : selectedCategoryType
     };
-  console.log('Draw data:', drawData);
+    console.log('Draw data:', drawData);
     try {
       const response = await axios.post('https://raffledraw-backendapi.onrender.com/draws/create', drawData);
       toast.success('Draw saved successfully!');
@@ -189,6 +196,17 @@ const Raffles = () => {
         <h2 className="text-2xl font-bold text-black ml-4">Create a new draw</h2>
         <img src={MoMo} alt="Logo 1" className="h-14" />
       </div>
+      {/* Draw name */}
+      <div className="m-6">
+        <h3 className="text-lg font-semibold mb-4">Draw name</h3>
+        <input
+          type="text"
+          placeholder="Enter draw name"
+          className="w-96 p-3 border rounded bg-slate-300"
+          value={drawName}
+          onChange={(e) => setDrawName(e.target.value)}
+        />
+      </div>
 
       {/* Draw settings */}
       <div className="m-6">
@@ -206,6 +224,22 @@ const Raffles = () => {
               />
               <span className="ml-2">{type}</span>
             </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Category type */}
+      <div className="m-6">
+        <h3 className="text-lg font-semibold mb-4">Category type</h3>
+        <div className="flex space-x-6 w-96">
+          {[1, 2, 3].map((type) => (
+            <button
+              key={type}
+              className={`py-2 px-4 border rounded w-1/3 text-center ${selectedCategoryType === type ? 'bg-yellow-400 font-bold' : ''}`}
+              onClick={() => handleCategoryTypeChange(type)}
+            >
+              {type}
+            </button>
           ))}
         </div>
       </div>
@@ -290,27 +324,18 @@ const Raffles = () => {
 
       {/* Spin time */}
       <div className="m-6">
-        <h3 className="text-lg font-semibold mb-4">Spin time</h3>
-        <input
-          type="text"
-          placeholder="Enter spin time"
+        <h3 className="text-lg font-semibold mb-4">Spin time /s</h3>
+        <select
           className="w-96 p-3 border rounded bg-slate-300"
           value={spinTime}
           onChange={(e) => setSpinTime(e.target.value)}
-        />
+        >
+          <option value="15">15 seconds</option>
+          <option value="30">30 seconds</option>
+          <option value="45">45 seconds</option>
+        </select>
       </div>
 
-      {/* Draw name */}
-      <div className="m-6">
-        <h3 className="text-lg font-semibold mb-4">Draw name</h3>
-        <input
-          type="text"
-          placeholder="Enter draw name"
-          className="w-96 p-3 border rounded bg-slate-300"
-          value={drawName}
-          onChange={(e) => setDrawName(e.target.value)}
-        />
-      </div>
 
       {/* Prize selection */}
       <div className="m-6">

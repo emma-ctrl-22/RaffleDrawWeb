@@ -166,7 +166,7 @@ const Winners = () => {
             whileTap={{ scale: 0.95 }}
             onClick={handleStartDraw}
             disabled={isDrawing}
-            className="py-2 px-4 bg-blue-500 text-black rounded hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50"
+            className="py-2 px-4 bg-gray-800 text-white rounded hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50"
           >
             {isDrawing ? 'Drawing...' : 'Start Draw'}
           </motion.button>
