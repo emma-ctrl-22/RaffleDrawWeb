@@ -17,7 +17,7 @@ const Login = () => {
         username,
         password
       });
-      console.log(response.data);
+      
       const { data, message, token,id } = response.data;
       
       // Store token in localStorage
@@ -44,38 +44,38 @@ const Login = () => {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      <div className="flex justify-between items-center ">
+      <div className="flex items-center justify-between ">
         <img src={mtn} alt="Logo 2" className="h-24 w-18" />
         <img src={Momo} alt="Logo 1" className="h-12" />
       </div>
-      <h2 className="text-center text-2xl font-bold text-gray-900">Log in</h2>
-      <div className="flex justify-center items-center flex-grow">
-        <div className="w-full max-w-md  space-y-8">
-          <form onSubmit={loginUser} className=" space-y-6">
-            <div className="rounded-md shadow-sm space-y-4">
+      <h2 className="text-2xl font-bold text-center text-gray-900">Log in</h2>
+      <div className="flex items-center justify-center flex-grow">
+        <div className="w-full max-w-md space-y-8">
+          <form onSubmit={loginUser} className="space-y-6 ">
+            <div className="space-y-4 rounded-md shadow-sm">
               <div>
-                <label htmlFor="username" className="block mb-3 text-md font-medium text-gray-900">
+                <label htmlFor="username" className="block mb-3 font-medium text-gray-900 text-md">
                   Username
                 </label>
                 <input
                   id="username"
                   name="username"
                   type="text"
-                  className="appearance-none block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                  className="block w-full px-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-md appearance-none focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
                   placeholder="Enter your Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block mb-3 text-md font-medium text-gray-9  00">
+                <label htmlFor="password" className="block mb-3 font-medium text-md text-gray-9 00">
                   Password
                 </label>
                 <input
                   id="password"
                   name="password"
                   type="password"
-                  className="appearance-none block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                  className="block w-full px-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-md appearance-none focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
