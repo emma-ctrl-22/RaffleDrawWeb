@@ -15,7 +15,7 @@ const Raffles = () => {
   const [numberOfDraws, setNumberOfDraws] = useState(1);
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedCounty, setSelectedCounty] = useState('');
-  const [spinTime, setSpinTime] = useState('');
+  const [spinTime, setSpinTime] = useState(15);
   const [selectedDrawType, setSelectedDrawType] = useState('Weekly');
   const [drawName, setDrawName] = useState('');
   const [open, setOpen] = useState(false);
